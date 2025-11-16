@@ -1,5 +1,4 @@
-#作者：@摄影师星星
-#二创作者：@不说爱你到永久
+#作者：@不说爱你到永久
 import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox
@@ -9,7 +8,7 @@ import shutil
 from tkinter import messagebox
 
 root = tk.Tk()
-root.title('RAW筛选器')
+root.title('图溜溜——RAW筛选器')
 max_w, max_h = root.maxsize()
 root.geometry('400x280+{}+{}'.format(int((max_w - 500) / 2), int((max_h - 200) / 2)))
 root.resizable(width=False, height=False)
@@ -17,7 +16,7 @@ root.resizable(width=False, height=False)
 
 # 回收站功能
 def move_to_recycle_bin(directory, filename):
-    RECYCLE_BIN = os.path.join(directory, "回收站")
+    RECYCLE_BIN = os.path.join(directory, "🗑️ 回收站")
     if not os.path.exists(RECYCLE_BIN):
         os.makedirs(RECYCLE_BIN)
 
@@ -26,7 +25,6 @@ def move_to_recycle_bin(directory, filename):
         shutil.move(file_path, os.path.join(RECYCLE_BIN, filename))
         return True
     return False
-
 
 # 文件分类功能 （完整 / 单个）
 def categorize_files(directory):
