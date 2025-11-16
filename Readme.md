@@ -1,8 +1,12 @@
 # 📂RAW格式筛选器
 
-一个用于快速筛选RAW格式与JPG格式图片对的Python工具，帮助用户高效整理和管理摄影素材。
+> 一个用于快速筛选RAW格式与JPG格式图片对的Python工具，帮助用户高效整理和管理摄影素材。
 
-Python License Platform
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
+
+
 
 ## ✨ 项目特色
 
@@ -12,6 +16,25 @@ Python License Platform
 - **🎨 交互优化**：提供弹窗让用户选择处理RAW或JPG格式，提升用户体验。
 - **🎨 界面优化**：优化按钮布局与窗口弹出逻辑，界面更美观协调。
 - **🔧 代码优化**：模块化设计，减少重复代码，提高可读性与可维护性。
+
+
+
+## 📁 项目结构
+
+```
+图溜溜--RAW筛选器/       
+├── Rademe.md 	   项目说明文档
+├── 图溜溜.exe		 Windows封包exe程序
+├── 图溜溜.py		 源代码
+├── 图溜溜(注释).py	源代码注释 
+├── 用前必看！.txt	使用说明书与注意事项
+├── project		    虚拟环境 
+├── 完整/           
+├── 单个/          
+└── 回收站/        
+```
+
+
 
 ## 📚 功能总览
 
@@ -75,22 +98,7 @@ Python License Platform
 - **数据备份前筛选**：在备份前，将确定需要的图片对备份，将疑似问题文件放入回收站检查。
 - **工作流程优化**：将繁琐的手动分类过程自动化，节省时间。
 
-## 📁 项目结构
 
-```
-RAW筛选器/
-├── main.py          
-├── Rademe.md        
-├── requirements.txt 
-├── RAW-5(终版).exe  
-├── RAW-5(终版).py   
-├── RAW-6(终版注释).py 
-├── 用前必看！.txt   
-├── 开发文档.md     
-├── 完整/           
-├── 单个/          
-└── 回收站/        
-```
 
 ## 📄 许可证
 
