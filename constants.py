@@ -25,3 +25,21 @@ WINDOW_TITLE = "图溜溜——RAW筛选器"
 MSG_SUCCESS = "操作完成"
 MSG_ERROR = "操作失败"
 MSG_CANCEL = "用户取消操作"
+
+# 日志配置
+LOG_FILE = "operation_log.txt"
+LOG_ENCODING = "utf-8"
+
+# 进度条配置
+PROGRESS_BAR_LENGTH = 20  # 总进度块数
+PROGRESS_BLOCK = "▆"     # 进度块字符
+PROGRESS_EMPTY = "."     # 空白块字符
+
+# 日志配置
+LOG_FILE = "operation_log.txt"
+LOG_ENCODING = "utf-8"
+
+# # 进度条配置
+# PROGRESS_BAR_LENGTH = 20  # 总进度块数
+# PROGRESS_BLOCK = "▆"     # 进度块字符
+# PROGRESS_EMPTY = "."     # 空白块字符

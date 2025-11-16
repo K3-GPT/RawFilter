@@ -1,4 +1,3 @@
-# file_handler.py
 import os
 import shutil
 import logging
@@ -40,7 +39,7 @@ class FileHandler:
             self.error_count += 1
             return False
 
-    def categorize_files(self, directory: str) -> dict:
+    def categorize_files(self, directory: str, progress_callback=None) -> dict:
         """将文件分类为完整对和单个文件"""
         try:
             complete_folder = os.path.join(directory, COMPLETE_FOLDER)
@@ -56,28 +55,44 @@ class FileHandler:
             files_moved = {'complete': 0, 'single': 0}
 
             # 遍历目录获取文件对
-            for filename in os.listdir(directory):
-                file_path = os.path.join(directory, filename)
-                if not os.path.isfile(file_path):
-                    continue
+            all_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
 
+            for i, filename in enumerate(all_files):
+                file_path = os.path.join(directory, filename)
                 name, ext = os.path.splitext(filename)
                 ext_lower = ext.lower()
 
                 if ext_lower in SUPPORTED_FORMATS:
                     file_pairs.setdefault(name, []).append(filename)
 
+                # 更新进度
+                if progress_callback:
+                    progress = 50 + int(((i + 1) / len(all_files)) * 50) if all_files else 100
+                    progress_callback(progress, 100, f"正在分类文件 ({i + 1}/{len(all_files)})")
+
             # 分类处理
-            for name, files in file_pairs.items():
-                if len(files) > 1:  # 有匹配的JPG和RAW
+            total_pairs = len(file_pairs)
+            for i, (name, files) in enumerate(file_pairs.items()):
+                # 检查文件组中是否同时包含图片格式和RAW格式
+                has_image = any(file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')) for file in files)
+                has_raw = any(file.lower().endswith(tuple(RAW_FORMATS)) for file in files)
+
+                if len(files) > 1 and has_image and has_raw:  # 同时有图片和RAW文件（完整对）
                     for file in files:
                         shutil.move(os.path.join(directory, file), os.path.join(complete_folder, file))
                     files_moved['complete'] += len(files)
                     logger.info(f"移动完整文件对: {name} ({len(files)} 个文件)")
                 elif len(files) == 1 and files[0].lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
+                    # 只有JPG/PNG/BMP文件且没有对应的RAW文件，移动到"单个"文件夹
                     shutil.move(os.path.join(directory, files[0]), os.path.join(single_folder, files[0]))
                     files_moved['single'] += 1
-                    logger.info(f"移动单个文件: {files[0]}")
+                    logger.info(f"移动单个JPG文件: {files[0]}")
+                # 注意：单独的RAW文件不在这里处理，它们会在remove_waste_files中处理
+
+                # 更新进度
+                if progress_callback:
+                    progress = 50 + int(((i + 1) / total_pairs) * 50) if total_pairs > 0 else 100
+                    progress_callback(progress, 100, f"正在移动文件 ({i + 1}/{total_pairs})")
 
             return files_moved
 
@@ -107,7 +122,7 @@ class FileHandler:
             logger.error(f"获取文件对失败: {str(e)}")
             raise
 
-    def copy_files_by_format(self, file_pairs: dict, target_dir: str, format_type: str) -> int:
+    def copy_files_by_format(self, file_pairs: dict, target_dir: str, format_type: str, progress_callback=None) -> int:
         """根据格式复制文件"""
         try:
             if not os.path.exists(target_dir):
@@ -117,6 +132,19 @@ class FileHandler:
             copied_count = 0
             target_formats = RAW_FORMATS if format_type == "RAW" else JPG_FORMATS
 
+            # 统计需要复制的文件总数
+            total_files_to_copy = 0
+            for key, files in file_pairs.items():
+                if len(files) > 1:  # 只处理有匹配的文件对
+                    for file_path in files:
+                        _, ext = os.path.splitext(file_path)
+                        ext_upper = ext.upper()
+
+                        if ext_upper in target_formats:
+                            total_files_to_copy += 1
+
+            # 复制文件并更新进度
+            processed_files = 0
             for key, files in file_pairs.items():
                 if len(files) > 1:  # 只处理有匹配的文件对
                     for file_path in files:
@@ -129,13 +157,20 @@ class FileHandler:
                             copied_count += 1
                             logger.info(f"复制文件: {filename} -> {target_dir}")
 
+                            processed_files += 1
+                            if progress_callback:
+                                progress = int(
+                                    (processed_files / total_files_to_copy) * 100) if total_files_to_copy > 0 else 100
+                                progress_callback(progress, 100,
+                                                  f"正在复制文件 ({processed_files}/{total_files_to_copy})")
+
             return copied_count
 
         except Exception as e:
             logger.error(f"文件复制失败: {str(e)}")
             raise
 
-    def remove_waste_files(self, directory: str, target_suffix: str) -> int:
+    def remove_waste_files(self, directory: str, target_suffix: str, progress_callback=None) -> int:
         """移除废片文件"""
         try:
             removed_count = 0
@@ -150,14 +185,35 @@ class FileHandler:
                 base_filename = os.path.splitext(filename)[0]
                 filename_counts[base_filename] = filename_counts.get(base_filename, 0) + 1
 
-            # 移动孤立文件到回收站
+            # 移动孤立的RAW文件到回收站
+            total_files = 0
+            # 先统计需要处理的孤立RAW文件数量
             for filename, count in filename_counts.items():
                 if count == 1:  # 孤立的文件
-                    target_filename = filename + target_suffix
-                    file_path = os.path.join(directory, target_filename)
-                    if os.path.exists(file_path):
-                        if self.move_to_recycle_bin(directory, target_filename):
-                            removed_count += 1
+                    # 检查是否有对应的RAW文件需要移除
+                    for raw_ext in RAW_FORMATS:
+                        target_filename = filename + raw_ext
+                        file_path = os.path.join(directory, target_filename)
+                        if os.path.exists(file_path):
+                            total_files += 1
+                            break
+
+            processed_files = 0
+            for filename, count in filename_counts.items():
+                if count == 1:  # 孤立的文件
+                    # 检查并移动对应的RAW文件到回收站
+                    for raw_ext in RAW_FORMATS:
+                        target_filename = filename + raw_ext
+                        file_path = os.path.join(directory, target_filename)
+                        if os.path.exists(file_path):
+                            if self.move_to_recycle_bin(directory, target_filename):
+                                removed_count += 1
+                            break
+
+                    processed_files += 1
+                    if progress_callback:
+                        progress = int((processed_files / total_files) * 50) if total_files > 0 else 50
+                        progress_callback(progress, 100, f"正在处理废片文件 ({processed_files}/{total_files})")
 
             return removed_count
 

@@ -1,7 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, SUPPORTED_FORMATS
+from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, SUPPORTED_FORMATS, LOG_FILE, PROGRESS_BAR_LENGTH, \
+    PROGRESS_BLOCK, PROGRESS_EMPTY
 from file_handler import FileHandler
+import datetime
+import os
 
 
 class RawFilterGUI:
@@ -21,6 +24,7 @@ class RawFilterGUI:
 
         self.file_handler = FileHandler()
         self.selected_format = tk.StringVar()
+        self.progress_var = tk.StringVar(value="")
         self.setup_ui()
 
     def setup_ui(self):
@@ -64,6 +68,10 @@ class RawFilterGUI:
         note_label = tk.Label(self.root, text='（注：建议 jpg <= raw 的数量。）', font=('黑体', 8))
         note_label.place(x=105, y=250)
 
+        # 进度显示
+        progress_label = tk.Label(self.root, textvariable=self.progress_var, font=('黑体', 9), fg='blue')
+        progress_label.place(x=10, y=250)
+
         # 按钮
         button_width = 100
         button_spacing = 40
@@ -80,6 +88,47 @@ class RawFilterGUI:
         path = filedialog.askdirectory(title=title)
         return path if path else None
 
+    def update_progress(self, current, total, message=""):
+        """更新进度显示"""
+        if total <= 0:
+            percentage = 0
+        else:
+            percentage = int((current / total) * 100)
+
+        filled_blocks = int((percentage / 100) * PROGRESS_BAR_LENGTH)
+        empty_blocks = PROGRESS_BAR_LENGTH - filled_blocks
+
+        progress_bar = PROGRESS_BLOCK * filled_blocks + PROGRESS_EMPTY * empty_blocks
+        progress_text = f"[{progress_bar}]{percentage}%"
+
+        if message:
+            progress_text += f" {message}"
+
+        self.progress_var.set(progress_text)
+        self.root.update()
+
+    def log_operation(self, operation_type, details, error_msg=None):
+        """记录操作日志"""
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        log_entry = f"\n{'=' * 60}\n"
+        log_entry += f"时间: {timestamp}\n"
+        log_entry += f"操作类型: {operation_type}\n"
+        log_entry += f"处理详情: {details}\n"
+
+        if error_msg:
+            log_entry += f"错误信息: {error_msg}\n"
+
+        try:
+            with open(LOG_FILE, 'a', encoding='utf-8') as f:
+                f.write(log_entry)
+        except Exception as e:
+            print(f"日志写入失败: {e}")
+
+    def clear_progress(self):
+        """清除进度显示"""
+        self.progress_var.set("")
+
     def remove_waste_files(self):
         """去除废片功能"""
         try:
@@ -92,18 +141,33 @@ class RawFilterGUI:
             if not directory:
                 return
 
+            self.update_progress(0, 100, "开始扫描文件...")
+
             # 执行废片移除
-            removed_count = self.file_handler.remove_waste_files(directory, suffix)
+            removed_count = self.file_handler.remove_waste_files(directory, suffix, self.update_progress)
+            self.update_progress(50, 100, f"已移除 {removed_count} 张废片")
 
             # 执行文件分类
-            files_moved = self.file_handler.categorize_files(directory)
+            files_moved = self.file_handler.categorize_files(directory, self.update_progress)
+            self.update_progress(100, 100, "文件分类完成")
 
-            messagebox.showinfo('完成', 
-                              f'已移除 {removed_count} 张废片到回收站\n'
-                              f'文件分类完成：完整文件 {files_moved["complete"]} 个，单个文件 {files_moved["single"]} 个')
+            complete_count = files_moved["complete"]
+            single_count = files_moved["single"]
+
+            # 记录日志
+            log_details = f"目录: {directory}, 移除废片: {removed_count}张, 完整文件: {complete_count}个, 单个文件: {single_count}个"
+            self.log_operation("去除废片", log_details)
+
+            messagebox.showinfo('完成',
+                                f'已移除 {removed_count} 张废片到回收站\n'
+                                f'文件分类完成：完整文件 {complete_count} 个，单个文件 {single_count} 个')
 
         except Exception as e:
-            messagebox.showerror('错误', f'操作失败：{str(e)}')
+            error_msg = str(e)
+            self.log_operation("去除废片", f"目录: {directory}", error_msg)
+            messagebox.showerror('错误', f'操作失败：{error_msg}')
+        finally:
+            self.clear_progress()
 
     def filter_files(self):
         """筛选精修功能"""
@@ -116,21 +180,36 @@ class RawFilterGUI:
             if not target_dir:
                 return
 
+            self.update_progress(0, 100, "开始获取文件对...")
+
             # 获取文件对
             file_pairs = self.file_handler.get_file_pairs(source_dir)
+            self.update_progress(30, 100, f"找到 {len(file_pairs)} 对文件")
 
             # 选择格式
             selected_format = self.ask_format_choice()
             if not selected_format:
                 return
 
+            self.update_progress(50, 100, f"开始复制 {selected_format} 格式文件...")
+
             # 复制文件
-            copied_count = self.file_handler.copy_files_by_format(file_pairs, target_dir, selected_format)
+            copied_count = self.file_handler.copy_files_by_format(file_pairs, target_dir, selected_format,
+                                                                  self.update_progress)
+            self.update_progress(100, 100, f"复制完成，共 {copied_count} 个文件")
+
+            # 记录日志
+            log_details = f"源目录: {source_dir}, 目标目录: {target_dir}, 格式: {selected_format}, 复制文件: {copied_count}个"
+            self.log_operation("筛选精修", log_details)
 
             messagebox.showinfo('完成', f'已复制 {copied_count} 张 {selected_format} 格式的文件')
 
         except Exception as e:
-            messagebox.showerror('错误', f'操作失败：{str(e)}')
+            error_msg = str(e)
+            self.log_operation("筛选精修", f"源目录: {source_dir}, 目标目录: {target_dir}", error_msg)
+            messagebox.showerror('错误', f'操作失败：{error_msg}')
+        finally:
+            self.clear_progress()
 
     def ask_format_choice(self):
         """询问用户选择格式"""
