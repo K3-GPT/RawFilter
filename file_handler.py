@@ -51,49 +51,92 @@ class FileHandler:
                     os.makedirs(folder)
                     logger.info(f"创建分类文件夹: {folder}")
 
+            # 使用更精确的数据结构来存储文件信息
             file_pairs = {}
             files_moved = {'complete': 0, 'single': 0}
 
             # 遍历目录获取文件对
             all_files = [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+            
+            logger.info(f"找到 {len(all_files)} 个文件")
 
-            for i, filename in enumerate(all_files):
+            # 按照图溜溜.py的逻辑实现文件分组
+            for filename in all_files:
                 file_path = os.path.join(directory, filename)
                 name, ext = os.path.splitext(filename)
                 ext_lower = ext.lower()
 
-                if ext_lower in SUPPORTED_FORMATS:
-                    file_pairs.setdefault(name, []).append(filename)
+                # 添加调试信息
+                logger.debug(f"处理文件: {filename}, 原始扩展名: {ext}, 小写扩展名: {ext_lower}")
 
-                # 更新进度
-                if progress_callback:
-                    progress = 50 + int(((i + 1) / len(all_files)) * 50) if all_files else 100
-                    progress_callback(progress, 100, f"正在分类文件 ({i + 1}/{len(all_files)})")
+                # 根据文件扩展名判断文件类型
+                if ext_lower in ['.jpg', '.jpeg', '.png', '.bmp']:
+                    # 使用setdefault方法将文件添加到相应组
+                    file_pairs.setdefault(name, []).append(filename)
+                    logger.debug(f"添加图片文件到组 {name}: {filename}")
+                elif ext_lower in ['.cr3', '.cr2', '.arw', '.nef', '.nrw', '.rw2', '.raw', '.dng', '.orf', '.raf', '.srw',
+                                  '.pef', '.iq', '.3fr']:
+                    # 使用setdefault方法将文件添加到相应组
+                    file_pairs.setdefault(name, []).append(filename)
+                    logger.debug(f"添加RAW文件到组 {name}: {filename}")
+
+            # 更新进度
+            if progress_callback:
+                progress = 50 + int((len(all_files) / (len(all_files) * 2)) * 50) if all_files else 100
+                progress_callback(progress, 100, f"正在分类文件 ({len(all_files)}/{len(all_files)})")
 
             # 分类处理
             total_pairs = len(file_pairs)
-            for i, (name, files) in enumerate(file_pairs.items()):
-                # 检查文件组中是否同时包含图片格式和RAW格式
-                has_image = any(file.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')) for file in files)
-                has_raw = any(file.lower().endswith(tuple(RAW_FORMATS)) for file in files)
-
-                if len(files) > 1 and has_image and has_raw:  # 同时有图片和RAW文件（完整对）
+            logger.info(f"开始分类 {total_pairs} 个文件组")
+            
+            # 按照图溜溜.py的逻辑处理文件分类
+            for name, files in file_pairs.items():
+                logger.debug(f"处理文件组 {name}: 包含文件 {len(files)} 个: {files}")
+                
+                # 如果文件组数量>1（说明有JPG和RAW），放入"完整"文件夹
+                if len(files) > 1:
                     for file in files:
-                        shutil.move(os.path.join(directory, file), os.path.join(complete_folder, file))
-                    files_moved['complete'] += len(files)
-                    logger.info(f"移动完整文件对: {name} ({len(files)} 个文件)")
-                elif len(files) == 1 and files[0].lower().endswith(('.jpg', '.jpeg', '.png', '.bmp')):
-                    # 只有JPG/PNG/BMP文件且没有对应的RAW文件，移动到"单个"文件夹
-                    shutil.move(os.path.join(directory, files[0]), os.path.join(single_folder, files[0]))
-                    files_moved['single'] += 1
-                    logger.info(f"移动单个JPG文件: {files[0]}")
+                        source_path = os.path.join(directory, file)
+                        if os.path.exists(source_path):  # 确保文件存在
+                            target_path = os.path.join(complete_folder, file)
+                            try:
+                                shutil.move(source_path, target_path)
+                                files_moved['complete'] += 1
+                                logger.info(f"移动文件到完整文件夹: {file}")
+                            except Exception as e:
+                                logger.error(f"移动文件失败 {file}: {str(e)}")
+                        else:
+                            logger.warning(f"文件不存在: {source_path}")
+                    
+                    logger.info(f"完成移动完整文件对: {name} (文件: {len(files)} 个)")
+                
+                # 如果文件组数量==1且文件扩展名为.jpg（不区分大小写），放入"单个"文件夹
+                elif len(files) == 1 and files[0].lower().endswith('.jpg'):
+                    source_path = os.path.join(directory, files[0])
+                    if os.path.exists(source_path):  # 确保文件存在
+                        target_path = os.path.join(single_folder, files[0])
+                        try:
+                            shutil.move(source_path, target_path)
+                            files_moved['single'] += 1
+                            logger.info(f"移动图片文件到单个文件夹: {files[0]}")
+                        except Exception as e:
+                            logger.error(f"移动文件失败 {files[0]}: {str(e)}")
+                    else:
+                        logger.warning(f"文件不存在: {source_path}")
+                    
+                    logger.info(f"完成移动单个图片文件: {name}")
+                
                 # 注意：单独的RAW文件不在这里处理，它们会在remove_waste_files中处理
 
-                # 更新进度
-                if progress_callback:
-                    progress = 50 + int(((i + 1) / total_pairs) * 50) if total_pairs > 0 else 100
-                    progress_callback(progress, 100, f"正在移动文件 ({i + 1}/{total_pairs})")
+            # 更新进度
+            if progress_callback:
+                progress = 100
+                progress_callback(progress, 100, "文件分类完成")
 
+            logger.info(
+                f"文件分类完成：移动了 {files_moved['complete']} 个文件到'完整'文件夹，{files_moved['single']} 个文件到'单个'文件夹")
+            
+            # 为了兼容gui.py的调用，需要确保返回值的计算正确
             return files_moved
 
         except Exception as e:
