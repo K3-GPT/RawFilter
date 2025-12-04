@@ -41,6 +41,62 @@ class FileHandler:
 
     def categorize_files(self, directory: str, progress_callback=None) -> dict:
         """将文件分类为完整对和单个文件"""
+        # 记录JSON格式的日志
+        import json
+        import time
+        import uuid
+        import os
+        
+        def record_json_log(action, directory, complete_files=0, single_files=0, removed_count=0, status="成功", 
+                            error_msg="", total_files=0):
+            task_id = f"{time.strftime('%Y%m%d')}-{time.strftime('%H%M%S')}-{str(uuid.uuid4())[:2]}"
+            log_data = {
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                "action": action,
+                "path": directory,
+                "removed_count": removed_count,
+                "complete_files": complete_files,
+                "single_files": single_files,
+                "状态": status,
+                "异常信息": error_msg,
+                "总文件": total_files,
+                "任务ID": task_id
+            }
+            
+            # 创建日志目录(如果不存在)
+            log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            
+            # 保存JSON日志到单独文件
+            log_filename = f"operation_log_{time.strftime('%Y%m%d')}.json"
+            log_path = os.path.join(log_dir, log_filename)
+            
+            try:
+                # 如果文件不存在，创建文件并写入JSON日志
+                if not os.path.exists(log_path):
+                    with open(log_path, "w", encoding="utf-8") as log_file:
+                        log_file.write("[")
+                        json.dump(log_data, log_file, ensure_ascii=False)
+                        log_file.write("]\n")
+                else:
+                    # 如果文件已存在，读取现有内容
+                    with open(log_path, "r", encoding="utf-8") as log_file:
+                        try:
+                            logs = json.load(log_file)
+                            if not isinstance(logs, list):
+                                logs = [logs]
+                        except json.JSONDecodeError:
+                            logs = []
+                    
+                    # 添加新日志并写入文件
+                    logs.append(log_data)
+                    with open(log_path, "w", encoding="utf-8") as log_file:
+                        json.dump(logs, log_file, ensure_ascii=False, indent=4)
+                        
+            except Exception as e:
+                logger.error(f"写入JSON日志文件失败: {str(e)}")
+        
         try:
             complete_folder = os.path.join(directory, COMPLETE_FOLDER)
             single_folder = os.path.join(directory, SINGLE_FOLDER)
@@ -133,6 +189,12 @@ class FileHandler:
                 progress = 100
                 progress_callback(progress, 100, "文件分类完成")
 
+            # 记录执行结果
+            record_json_log("categorize_files", directory, 
+                          complete_files=files_moved['complete'], 
+                          single_files=files_moved['single'],
+                          total_files=len(all_files))
+            
             logger.info(
                 f"文件分类完成：移动了 {files_moved['complete']} 个文件到'完整'文件夹，{files_moved['single']} 个文件到'单个'文件夹")
             
@@ -140,6 +202,13 @@ class FileHandler:
             return files_moved
 
         except Exception as e:
+            
+            # 记录失败状态和错误信息
+            record_json_log("categorize_files", directory, 
+                          complete_files=0, 
+                          single_files=0,
+                          status="失败", error_msg=str(e), total_files=0)
+            
             logger.error(f"文件分类失败: {str(e)}")
             raise
 
@@ -215,10 +284,66 @@ class FileHandler:
 
     def remove_waste_files(self, directory: str, target_suffix: str, progress_callback=None) -> int:
         """移除废片文件"""
+        # 记录JSON格式的日志
+        import json
+        import time
+        import uuid
+        import os
+        
+        def record_json_log(action, directory, complete_files=0, single_files=0, removed_count=0, status="成功", 
+                            error_msg="", total_files=0):
+            task_id = f"{time.strftime('%Y%m%d')}-{time.strftime('%H%M%S')}-{str(uuid.uuid4())[:2]}"
+            log_data = {
+                "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                "action": action,
+                "path": directory,
+                "removed_count": removed_count,
+                "complete_files": complete_files,
+                "single_files": single_files,
+                "状态": status,
+                "异常信息": error_msg,
+                "总文件": total_files,
+                "任务ID": task_id
+            }
+            
+            # 创建日志目录(如果不存在)
+            log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+            
+            # 保存JSON日志到单独文件
+            log_filename = f"operation_log_{time.strftime('%Y%m%d')}.json"
+            log_path = os.path.join(log_dir, log_filename)
+            
+            try:
+                # 如果文件不存在，创建文件并写入JSON日志
+                if not os.path.exists(log_path):
+                    with open(log_path, "w", encoding="utf-8") as log_file:
+                        log_file.write("[")
+                        json.dump(log_data, log_file, ensure_ascii=False)
+                        log_file.write("]\n")
+                else:
+                    # 如果文件已存在，读取现有内容
+                    with open(log_path, "r", encoding="utf-8") as log_file:
+                        try:
+                            logs = json.load(log_file)
+                            if not isinstance(logs, list):
+                                logs = [logs]
+                        except json.JSONDecodeError:
+                            logs = []
+                    
+                    # 添加新日志并写入文件
+                    logs.append(log_data)
+                    with open(log_path, "w", encoding="utf-8") as log_file:
+                        json.dump(logs, log_file, ensure_ascii=False, indent=4)
+                        
+            except Exception as e:
+                logger.error(f"写入JSON日志文件失败: {str(e)}")
+        
+        removed_count = 0
+        filename_counts = {}
+        
         try:
-            removed_count = 0
-            filename_counts = {}
-
             # 统计文件名出现次数
             for filename in os.listdir(directory):
                 file_path = os.path.join(directory, filename)
@@ -258,8 +383,16 @@ class FileHandler:
                         progress = int((processed_files / total_files) * 50) if total_files > 0 else 50
                         progress_callback(progress, 100, f"正在处理废片文件 ({processed_files}/{total_files})")
 
+            # 记录执行结果
+            record_json_log("remove_waste_files", directory, removed_count=removed_count, 
+                          total_files=total_files)
+            
             return removed_count
 
         except Exception as e:
+            # 记录失败状态和错误信息
+            record_json_log("remove_waste_files", directory, removed_count=0, 
+                          status="失败", error_msg=str(e), total_files=total_files)
+            
             logger.error(f"移除废片失败: {str(e)}")
             raise
