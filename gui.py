@@ -4,8 +4,6 @@ from constants import WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, SUPPORTED_FORMA
     PROGRESS_BLOCK, PROGRESS_EMPTY
 from file_handler import FileHandler
 import datetime
-import os
-
 
 
 class RawFilterGUI:

@@ -4,7 +4,6 @@
 模块化版本的主程序入口
 """
 import sys
-import os
 from gui import RawFilterGUI
 
 
