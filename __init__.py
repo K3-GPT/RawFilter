@@ -1,6 +1,5 @@
 """
 图溜溜——RAW筛选器
-模块化版
 """
 
 __version__ = "2.0.0"
@@ -12,4 +11,3 @@ from .file_handler import FileHandler
 from .gui import RawFilterGUI
 
 __all__ = ['FileHandler', 'RawFilterGUI']
-# 1
