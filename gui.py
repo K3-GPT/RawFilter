@@ -39,7 +39,19 @@ class RawFilterGUI:
         format_label.place(x=50, y=50)
 
         format_combo = ttk.Combobox(self.root, textvariable=self.selected_format, width=26)
-        format_combo['values'] = tuple(sorted(SUPPORTED_FORMATS))
+        # 定义常见格式的优先级顺序
+        priority_formats = [
+            '.CR3', '.CR2', '.JPG', '.JPEG', '.ARW', '.NEF',
+            '.NRW', '.RW2', '.RAW', '.DNG', '.orf', '.raf', '.SRW',
+            '.PEF', '.IQ', '.3FR', '.PNG', '.BMP'
+        ]
+        
+        # 根据优先级排序，优先级高的格式排在前面
+        sorted_formats = sorted(SUPPORTED_FORMATS, key=lambda f: (
+            priority_formats.index(f) if f in priority_formats else len(priority_formats)
+        ))
+        
+        format_combo['values'] = tuple(sorted_formats)
         format_combo.place(x=150, y=52.5)
         format_combo.current(0)
 

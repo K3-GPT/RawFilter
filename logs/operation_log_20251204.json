@@ -1,0 +1,122 @@
+[
+    {
+        "timestamp": "2025-12-04 10:29:16",
+        "action": "remove_waste_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (3)",
+        "removed_count": 22,
+        "complete_files": 0,
+        "single_files": 0,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 22,
+        "任务ID": "20251204-102916-06"
+    },
+    {
+        "timestamp": "2025-12-04 10:29:16",
+        "action": "categorize_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (3)",
+        "removed_count": 0,
+        "complete_files": 10,
+        "single_files": 18,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 28,
+        "任务ID": "20251204-102916-e2"
+    },
+    {
+        "timestamp": "2025-12-04 10:32:50",
+        "action": "remove_waste_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (5)",
+        "removed_count": 22,
+        "complete_files": 0,
+        "single_files": 0,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 22,
+        "任务ID": "20251204-103250-3f"
+    },
+    {
+        "timestamp": "2025-12-04 10:32:50",
+        "action": "categorize_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (5)",
+        "removed_count": 0,
+        "complete_files": 10,
+        "single_files": 18,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 28,
+        "任务ID": "20251204-103250-4d"
+    },
+    {
+        "timestamp": "2025-12-04 16:55:24",
+        "action": "remove_waste_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (3) - 副本",
+        "removed_count": 21,
+        "complete_files": 0,
+        "single_files": 0,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 21,
+        "任务ID": "20251204-165524-8a"
+    },
+    {
+        "timestamp": "2025-12-04 16:55:24",
+        "action": "categorize_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (3) - 副本",
+        "removed_count": 0,
+        "complete_files": 10,
+        "single_files": 18,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 29,
+        "任务ID": "20251204-165524-a9"
+    },
+    {
+        "timestamp": "2025-12-04 16:55:36",
+        "action": "remove_waste_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (4) - 副本",
+        "removed_count": 21,
+        "complete_files": 0,
+        "single_files": 0,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 21,
+        "任务ID": "20251204-165536-77"
+    },
+    {
+        "timestamp": "2025-12-04 16:55:36",
+        "action": "categorize_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (4) - 副本",
+        "removed_count": 0,
+        "complete_files": 10,
+        "single_files": 18,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 29,
+        "任务ID": "20251204-165536-6b"
+    },
+    {
+        "timestamp": "2025-12-04 16:58:18",
+        "action": "remove_waste_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (4) - 副本",
+        "removed_count": 21,
+        "complete_files": 0,
+        "single_files": 0,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 21,
+        "任务ID": "20251204-165818-2f"
+    },
+    {
+        "timestamp": "2025-12-04 16:58:18",
+        "action": "categorize_files",
+        "path": "D:/桌面/22 闵鑫梅3/1 (4) - 副本",
+        "removed_count": 0,
+        "complete_files": 10,
+        "single_files": 18,
+        "状态": "成功",
+        "异常信息": "",
+        "总文件": 29,
+        "任务ID": "20251204-165818-e6"
+    }
+]

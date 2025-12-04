@@ -221,13 +221,26 @@ class FileHandler:
                     file_path = os.path.join(root_path, file)
                     file_name, ext = os.path.splitext(file)
                     ext_lower = ext.lower()
+                    ext_upper = ext.upper()
 
-                    if ext_lower in SUPPORTED_FORMATS:
+                    # 扩展文件匹配范围，不仅限于支持的格式
+                    # 匹配所有可能的图片格式
+                    if (ext_lower in [fmt.lower() for fmt in SUPPORTED_FORMATS] or
+                        ext_upper in ['.JPG', '.JPEG', '.PNG', '.BMP', '.CR3', '.CR2', '.ARW', '.NEF', 
+                                     '.NRW', '.RW2', '.RAW', '.DNG', '.ORF', '.RAF', '.SRW', '.PEF', 
+                                     '.IQ', '.3FR']):
                         if file_name not in file_pairs:
                             file_pairs[file_name] = []
                         file_pairs[file_name].append(file_path)
 
             logger.info(f"扫描完成，找到 {len(file_pairs)} 个文件组")
+            
+            # 详细记录找到的文件组信息
+            for file_name, paths in file_pairs.items():
+                logger.info(f"文件组: {file_name}, 文件数量: {len(paths)}")
+                for path in paths:
+                    logger.debug(f"  - {path}")
+            
             return file_pairs
 
         except Exception as e:
@@ -242,44 +255,63 @@ class FileHandler:
                 logger.info(f"创建目标文件夹: {target_dir}")
 
             copied_count = 0
-            target_formats = RAW_FORMATS if format_type == "RAW" else JPG_FORMATS
+            
+            # 确保格式字符串正确匹配常量
+            target_formats = RAW_FORMATS if format_type.upper() == "RAW" else JPG_FORMATS
+            
+            # 打印目标格式信息用于调试
+            logger.info(f"目标格式: {target_formats}")
 
             # 统计需要复制的文件总数
             total_files_to_copy = 0
+            files_to_copy = []  # 需要复制的文件列表
+            
             for key, files in file_pairs.items():
                 if len(files) > 1:  # 只处理有匹配的文件对
                     for file_path in files:
                         _, ext = os.path.splitext(file_path)
                         ext_upper = ext.upper()
-
+                        
+                        # 记录所有匹配的文件
+                        logger.debug(f"检查文件: {file_path}, 扩展名: {ext_upper}")
+                        
                         if ext_upper in target_formats:
                             total_files_to_copy += 1
+                            files_to_copy.append((key, file_path))
+
+            logger.info(f"需要复制的文件总数: {total_files_to_copy}")
 
             # 复制文件并更新进度
             processed_files = 0
-            for key, files in file_pairs.items():
-                if len(files) > 1:  # 只处理有匹配的文件对
-                    for file_path in files:
-                        _, ext = os.path.splitext(file_path)
-                        ext_upper = ext.upper()
+            for key, file_path in files_to_copy:
+                # 获取文件名
+                filename = os.path.basename(file_path)
+                
+                # 构造目标路径
+                target_path = os.path.join(target_dir, filename)
+                
+                # 复制文件
+                shutil.copy2(file_path, target_path)
+                copied_count += 1
+                logger.info(f"复制文件: {filename} -> {target_dir}")
 
-                        if ext_upper in target_formats:
-                            filename = os.path.basename(file_path)
-                            shutil.copy2(file_path, os.path.join(target_dir, filename))
-                            copied_count += 1
-                            logger.info(f"复制文件: {filename} -> {target_dir}")
+                processed_files += 1
+                if progress_callback:
+                    # 更新进度
+                    progress = int((processed_files / total_files_to_copy) * 50) + 50  # 50-100的范围
+                    if progress > 100:
+                        progress = 100
+                    progress_callback(progress, 100,
+                                      f"正在复制文件 ({processed_files}/{total_files_to_copy})")
 
-                            processed_files += 1
-                            if progress_callback:
-                                progress = int(
-                                    (processed_files / total_files_to_copy) * 100) if total_files_to_copy > 0 else 100
-                                progress_callback(progress, 100,
-                                                  f"正在复制文件 ({processed_files}/{total_files_to_copy})")
-
+            logger.info(f"文件复制完成: 共复制 {copied_count} 个文件")
             return copied_count
 
         except Exception as e:
             logger.error(f"文件复制失败: {str(e)}")
+            # 记录详细的错误信息
+            import traceback
+            logger.error(traceback.format_exc())
             raise
 
     def remove_waste_files(self, directory: str, target_suffix: str, progress_callback=None) -> int:

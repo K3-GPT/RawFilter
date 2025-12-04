@@ -79,9 +79,6 @@ def main(directory, suffix):
     return S
 
 
-
-
-
 def choose(path, opath):
     filename_counts = {}
     S = 0
