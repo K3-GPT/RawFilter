@@ -21,20 +21,14 @@
 
 ## 🚀 快速开始
 
-### 💻 直接使用exe文件（推荐）
+### 💻 直接使用exe文件
 
 如果您只想使用程序功能，无需安装Python环境：
 
 1. **直接运行exe**
    ```
-   dist/图溜溜.exe
+   图溜溜.exe
    ```
-
-2. **dist目录包含**
-   - `图溜溜.exe` - 主程序（Windows可执行文件）
-   - `Readme.md` - 项目说明文档
-   - `启动说明.txt` - 详细启动指南
-   - `用前必看！.txt` - 使用前必读注意事项
 
 3. **启动方法**
    - 双击 `图溜溜.exe` 即可运行
@@ -45,13 +39,13 @@
 如果您需要修改代码或二次开发：
 
 1. **环境要求**
-   - Python 3.7+
+   - Python 3.11+
    - tkinter (通常随Python安装)
 
 2. **安装运行**
    ```bash
    # 克隆项目
-   git clone [项目地址]
+   git clone https://github.com/K3-GPT/RawFilter.git
    cd RawFilter
    
    # 直接运行
@@ -82,8 +76,9 @@ RawFilter/
 ├── logs/               JSON格式日志目录
 │   ├── operation_log_YYYYMMDD.json  按日期分类的JSON日志
 │   └── ...
-├── 图溜溜.py           原始单文件版本（对比参考）
-├── 图溜溜.exe          Windows可执行文件
+├── raw/               原始单文件版本
+│   ├── 图溜溜.py           原始单文件版本（对比参考）
+│   ├── 图溜溜.exe          Windows可执行文件
 └── 用前必看！.txt      使用说明文档
 
 # 运行目录结构（操作后生成）
