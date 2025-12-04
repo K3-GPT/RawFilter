@@ -2,6 +2,8 @@
 
 > 一个用于快速筛选RAW格式与JPG格式图片对的Python工具，帮助用户高效整理和管理摄影素材。
 
+
+
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
@@ -24,6 +26,8 @@
 ### 💻 直接使用exe文件
 
 如果您只想使用程序功能，无需安装Python环境：
+
+或点击右侧Releases进行下载单个程序
 
 1. **直接运行exe**
    ```
